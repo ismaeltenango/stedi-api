@@ -1,0 +1,87 @@
+# ismael 2022
+# This is the version of YAML we are using with the Kubernetes API
+apiVersion: apps/v1
+# The kind is the type of kubernetes resource we are using
+# A deployment is when we run code on a server
+kind: Deployment
+# Metadata is information related to the object we created in Kubernetes
+metadata:
+# The name here is the name of our deployment
+  name: redis-dev
+spec:
+# Replicas refers to the number of pods we deploy
+  replicas: 1
+# A selector is a route to my pod
+  selector:
+# Matchlabels are a label for my selector
+    matchLabels:
+# App is a specific kind of label for my pod
+      app: redis-dev
+# The Template describes all the features of my pod
+  template:
+# Metadata provides labels for my template
+    metadata:
+      labels:
+        app: redis-dev
+# The spec refers to the specification of my containers in my pod
+    spec:
+# Containers can have one or more docker containers in the pod
+      containers:
+# The name of the container is specified below
+        - name: redis-dev
+# The image is a prebuilt file containing the operating system
+          image: redis
+# The ports is a list of tcp ports the pod listens on
+          ports:
+# The container port is a specific port the pod listens on
+           - containerPort: 80
+# Resources are the compute resources used by the pod in the cloud
+          resources:
+# Limits represent the max amount of cpu and memory allowed for the pod
+            limits:
+# CPU is the max amount of CPU that can be used by the pod
+              cpu: ".125"
+# Memory is the max amount of memory that can be used by the pod
+              memory: "500Mi"
+# Requests is the minimum amount of compute resources used by the pod
+            requests:
+# CPU is the minimum amount of CPU the pod needs to run
+              cpu: ".1"
+# Memory is the minimum amount of memory the pod needs to run
+              memory: "250Mi"
+# LivenessProbe is a configuration that checks the pod for health
+          livenessProbe:
+# HttpGet instructs kubernetes to do an HTTP request to check health
+            httpGet:
+# Path defines the url to use when doing the HTTP request
+              path: /
+# Port defines the port to use when doing the HTTP request
+              port: 80
+# initialDelaySeconds tells Kubernetes to wait before doing a request
+            initialDelaySeconds: 3
+# periodSeconds tells Kubernetes how often to check health
+            periodSeconds: 3
+---
+#  apiVersion tells Kubernetes which version of yaml to use
+apiVersion: v1
+#  kind tell kubernetes what kind of object to create
+kind: Service
+# metadata contain atrubuttes abuout the objct
+metadata:
+#  name is the name of the object we are creating
+  name: redis-dev-loadbalancer
+#  spec is the spef=cification for the object (or the loadbalancer)
+spec: 
+  #selector tells the network layer how to find the right pod
+  selector: 
+#  app teel the selector wich app to send the network traffic to
+    app: redis-dev
+#  tell kubernetes the type of service I want
+# a load balancer destributes network packets to on or more pods
+  type: LoadBalancer
+#  ports are list of ports the load ballancer listens on
+  ports:
+#  port is the port we want to listen in the network
+    - port: 80
+# target port is the port the pod listens on insed of kubernetes
+      targetPort: 80
