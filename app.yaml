@@ -30,7 +30,7 @@ spec:
 # The name of the container is specified below
         - name: stedi-ismael
 # The image is a prebuilt file containing the operating system
-          image: 98ismael/nginx-ismael
+          image: gcr.io/group-project-cloud-account/stedi-ismael
 # The ports is a list of tcp ports the pod listens on
           ports:
 # The container port is a specific port the pod listens on
