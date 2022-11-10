@@ -61,27 +61,66 @@ spec:
             initialDelaySeconds: 10
 # periodSeconds tells Kubernetes how often to check health
             periodSeconds: 3
+            
+# #  apiVersion tells Kubernetes which version of yaml to use
+# apiVersion: v1
+# #  kind tell kubernetes what kind of object to create
+# kind: Service
+# # metadata contain atrubuttes abuout the objct
+# metadata:
+# #  name is the name of the object we are creating
+#   name: stedi-ismael-loadbalancer
+# #  spec is the spef=cification for the object (or the loadbalancer)
+# spec: 
+#   #selector tells the network layer how to find the right pod
+#   selector: 
+# #  app teel the selector wich app to send the network traffic to
+#     app: stedi-ismael
+# #  tell kubernetes the type of service I want
+# # a load balancer destributes network packets to on or more pods
+#   type: LoadBalancer
+# #  ports are list of ports the load ballancer listens on
+#   ports:
+# #  port is the port we want to listen in the network
+#     - port: 80
+# # target port is the port the pod listens on insed of kubernetes
+#       targetPort: 4567
 ---
-#  apiVersion tells Kubernetes which version of yaml to use
-apiVersion: v1
-#  kind tell kubernetes what kind of object to create
-kind: Service
-# metadata contain atrubuttes abuout the objct
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-#  name is the name of the object we are creating
-  name: stedi-ismael-loadbalancer
-#  spec is the spef=cification for the object (or the loadbalancer)
-spec: 
-  #selector tells the network layer how to find the right pod
-  selector: 
-#  app teel the selector wich app to send the network traffic to
+  name: stedi-ingress-ismael
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: stedi-public-ismael
+    networking.gke.io/managed-certificates: stedi-certificate-ismael
+    kubernetes.io/ingress.allow-http: "false"
+    #  the below line was not there before
+    kubernetes.io/ingress.class: "gce"
+spec:
+  defaultBackend:
+    service:
+      name: stedi-nodeport-ismael
+      port:
+        number: 80
+
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: stedi-certificate-ismael
+spec:
+  domains:
+    - ismael-stedi.cit262.com
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stedi-nodeport-ismael
+spec:
+  selector:
     app: stedi-ismael
-#  tell kubernetes the type of service I want
-# a load balancer destributes network packets to on or more pods
-  type: LoadBalancer
-#  ports are list of ports the load ballancer listens on
+  type: NodePort
   ports:
-#  port is the port we want to listen in the network
-    - port: 80
-# target port is the port the pod listens on insed of kubernetes
+    - protocol: TCP
+      port: 80
       targetPort: 4567
