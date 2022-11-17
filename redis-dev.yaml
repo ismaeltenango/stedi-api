@@ -51,7 +51,7 @@ spec:
           - name: REDIS_PASS
             valueFrom:
               secretKeyRef:
-                name: redis-stedi-dev-ismael
+                name: redis-secrets-dev-ismael
                 key: REDIS_PASS
           volumeMounts:
             - name: redis-dev-volume
