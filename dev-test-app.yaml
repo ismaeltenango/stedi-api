@@ -1,0 +1,140 @@
+# ismael 2022
+# This is the version of YAML we are using with the Kubernetes API
+apiVersion: apps/v1
+# The kind is the type of kubernetes resource we are using
+# A deployment is when we run code on a server
+kind: Deployment
+# Metadata is information related to the object we created in Kubernetes
+metadata:
+# The name here is the name of our deployment
+  name: stedi-ismael-dev
+spec:
+# Replicas refers to the number of pods we deploy
+  replicas: 1
+# A selector is a route to my pod
+  selector:
+# Matchlabels are a label for my selector
+    matchLabels:
+# App is a specific kind of label for my pod
+      app: stedi-ismael-dev
+# The Template describes all the features of my pod
+  template:
+# Metadata provides labels for my template
+    metadata:
+      labels:
+        app: stedi-ismael-dev
+# The spec refers to the specification of my containers in my pod
+    spec:
+# Containers can have one or more docker containers in the pod
+      containers:
+# The name of the container is specified below
+        - name: stedi-ismael-dev
+# The image is a prebuilt file containing the operating system
+          image: gcr.io/group-project-cloud-account/stedi-ismael
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets-dev-ismael
+                  key: REDIS_PASS
+            - name: REDIS_HOST
+              value: "redis-stedi-dev-ismael"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_DB
+              value: "0"
+# The ports is a list of tcp ports the pod listens on
+          ports:
+# The container port is a specific port the pod listens on
+           - containerPort: 4567
+# Resources are the compute resources used by the pod in the cloud
+          resources:
+# Limits represent the max amount of cpu and memory allowed for the pod
+            limits:
+# CPU is the max amount of CPU that can be used by the pod
+              cpu: ".125"
+# Memory is the max amount of memory that can be used by the pod
+              memory: "500Mi"
+# Requests is the minimum amount of compute resources used by the pod
+            requests:
+# CPU is the minimum amount of CPU the pod needs to run
+              cpu: ".1"
+# Memory is the minimum amount of memory the pod needs to run
+              memory: "250Mi"
+# LivenessProbe is a configuration that checks the pod for health
+          livenessProbe:
+# HttpGet instructs kubernetes to do an HTTP request to check health
+            httpGet:
+# Path defines the url to use when doing the HTTP request
+              path: /
+# Port defines the port to use when doing the HTTP request
+              port: 4567
+# initialDelaySeconds tells Kubernetes to wait before doing a request
+            initialDelaySeconds: 10
+# periodSeconds tells Kubernetes how often to check health
+            periodSeconds: 10
+---            
+#  apiVersion tells Kubernetes which version of yaml to use
+apiVersion: v1
+#  kind tell kubernetes what kind of object to create
+kind: Service
+# metadata contain atrubuttes abuout the objct
+metadata:
+#  name is the name of the object we are creating
+  name: stedi-ismael-dev-loadbalancer
+#  spec is the spef=cification for the object (or the loadbalancer)
+spec: 
+  #selector tells the network layer how to find the right pod
+  selector: 
+#  app teel the selector wich app to send the network traffic to
+    app: stedi-ismael-dev
+#  tell kubernetes the type of service I want
+# a load balancer destributes network packets to on or more pods
+  type: LoadBalancer
+#  ports are list of ports the load ballancer listens on
+  ports:
+#  port is the port we want to listen in the network
+    - port: 80
+# target port is the port the pod listens on insed of kubernetes
+      targetPort: 4567
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: stedi-ingress-ismael
+#   annotations:
+#     kubernetes.io/ingress.global-static-ip-name: stedi-public-ismael
+#     networking.gke.io/managed-certificates: stedi-certificate-ismael
+#     kubernetes.io/ingress.allow-http: "false"
+#     #  the below line was not there before
+#     kubernetes.io/ingress.class: "gce"
+# spec:
+#   defaultBackend:
+#     service:
+#       name: stedi-nodeport-ismael
+#       port:
+#         number: 80
+
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: stedi-certificate-ismael
+spec:
+  domains:
+    - ismael-stedi.cit262.com
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stedi-nodeport-ismael
+spec:
+  selector:
+    app: stedi-ismael-dev
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 4567
+
+# I tried to work in the final details... I couldnt figure it out.
