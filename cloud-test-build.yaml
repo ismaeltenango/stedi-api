@@ -1,5 +1,7 @@
-#© 2022 ismael Tenango
+#© 2022 Ismael Tenango
+
 steps:
+
   # This step builds the container image.
   - name: 'gcr.io/cloud-builders/docker'
     id: Build
@@ -8,6 +10,7 @@ steps:
       - '-t'
       - 'gcr.io/$PROJECT_ID/stedi-ismael:$SHORT_SHA'
       - '.'
+
   # This step pushes the image to Container Registry
   # The PROJECT_ID and SHORT_SHA variables are automatically
   # replaced by Cloud Build.
@@ -16,6 +19,7 @@ steps:
     args:
       - 'push'
       - 'gcr.io/$PROJECT_ID/stedi-ismael:$SHORT_SHA'
+
   # This step builds the container image.
   - name: 'gcr.io/cloud-builders/docker'
     id: Build-Latest
@@ -24,6 +28,7 @@ steps:
       - '-t'
       - 'gcr.io/$PROJECT_ID/stedi-ismael:latest'
       - '.'
+
   # This step pushes the image to Container Registry
   # The PROJECT_ID and SHORT_SHA variables are automatically
   # replaced by Cloud Build.
@@ -32,6 +37,7 @@ steps:
     args:
       - 'push'
       - 'gcr.io/$PROJECT_ID/stedi-ismael:latest'
+
   # This step stops the stedi pod
   - name: 'gcr.io/cloud-builders/kubectl'
     id: Stop Pod
@@ -43,14 +49,18 @@ steps:
     env:
       - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
       - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-      # This step deploys the application in Kubernetes
-  - name: 'gcr.io/cloud-builders/gke-deploy'
+
+  # This step deploys the stage application in Kubernetes
+  - name: 'gcr.io/cloud-builders/gcloud'
     args:
-      - run
-      - --filename=app-dev.yaml
-      - --image=gcr.io/$PROJECT_ID/stedi-ismael:$SHORT_SHA
-      - --location=us-central1-c
-      - --cluster=cluster-1
+    - builds
+    - submit
+    - --config
+    - cloud-build-dev.yaml
+    #   - --substitutions
+    #   - _SHORT_SHA=$SHORT_SHA
+    #   - .
+
   # This step scales up the stedi pod
   - name: 'gcr.io/cloud-builders/kubectl'
     id: Start Pod
@@ -62,13 +72,3 @@ steps:
     env:
       - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
       - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-    # This step deploys the stage application in Kubernetes
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args:
-    - builds
-    - submit
-    - --config
-    - cloud-build-dev-test.yaml
-    #   - --substitutions
-    #   - _SHORT_SHA=$SHORT_SHA
-    #   - .
